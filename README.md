@@ -1,6 +1,76 @@
 # KanMind
 
-## Projekt Installation & Erste Schritte
+Description for the project. KanMind is a backend project... etc.
+
+## How to install
+
+Step 1: Create a virtuel environment
+
+Unix
+'''bash
+python3 -m venv .venv
+'''
+
+Windows
+'''bash
+
+'''
+
+Step 2: Activate virtuell environment
+
+Unix
+'''bash
+source .venv/bin/activate
+'''
+
+Windows
+'''bash
+
+'''
+
+Step 3: Install the requirements
+
+'''bash
+pip install -r requirements
+'''
+
+Step 4: Create your .env file
+
+Unix
+'''bash
+cp .env.example .env
+'''
+
+Windows
+'''bash
+
+'''
+
+Then set your values:
+
+Key | Value
+SECRET_KEY | Value
+
+Step 5: Migrate the migrations
+
+'''bash
+python manage.py migrate
+'''
+
+Step 6: Start the server
+
+'''bash
+python manage.py runserver
+'''
+
+## Tech stack
+
+- python
+- django
+- drf
+- squlite
+
+## Routes
 
 ## Aufteilung und Aufgaben
 
