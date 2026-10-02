@@ -28,7 +28,10 @@ INSTALLED_APPS = [
     'comments_app.apps.CommentsAppConfig',
     'tasks_app.apps.TasksAppConfig',
     'rest_framework',
+    'rest_framework.authtoken'
 ]
+
+AUTH_USER_MODEL = "auth_app.User"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -39,6 +42,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication"
+    ]
+}
 
 ROOT_URLCONF = 'core.urls'
 
