@@ -39,12 +39,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         password = serializers.CharField(write_only=True)
         
         def validate(self, data):
-            email = data['email']
+            email = data['email']  # Die eingegebenen Werte aus dem Dictionary auslesen.
             password = data['password']
             
-            user = authenticate(username=email, password=password)
+            user = authenticate(username=email, password=password)  # Zugangsdaten prüfen.   # Bei der Registrierung wurde die E-Mail als username gespeichert. # Bei Erfolg kommt ein Benutzerobjekt zurück, sonst None.
             
-            if not user:
+            if not user:  # Wenn die Anmeldung scheitert, die Validierung abbrechen.
                 raise serializers.ValidationError("User not found")
             
             data['user'] = user

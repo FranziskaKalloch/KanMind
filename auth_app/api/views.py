@@ -4,7 +4,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.permissions import AllowAny
-from .serializers import UserRegistrationSerializer
+from .serializers import UserRegistrationSerializer, UserLoginSerializer
 
 # APIView:
 # man kann mit der APIView selbst bestimmen, was bei GET, POST und anderen
@@ -35,50 +35,19 @@ class RegistrationView(APIView):
         }, status=status.HTTP_201_CREATED) 
         # es wird hier ein dictonary übergeben, weil die Antwort mehrere Werte enthalten soll!
 
-
-# POST-Anfrage entgegennehmen.
-# Registrierung muss ohne Anmeldung erlaubt sein.
-
-# Die Eingaben an deinen Serializer übergeben.
-# Die gesendeten Werte findest du in request.data.
-
-# Den Serializer validieren lassen.
-# Bei ungültigen Daten soll eine Antwort mit Status 400 entstehen.
-
-# Den Benutzer speichern lassen.
-# Die View ruft dafür save() am Serializer auf. DRF führt dann deine create()-Methode aus und liefert den Benutzer zurück.
-
-# Ein Token für den Benutzer erstellen.
-
-# Die Antwort zurückgeben.
-# Sie enthält token, fullname, email und user_id sowie den Status 201.
-
-
-
-
-
-# POST /api/registration/
-
-# Description: Erstellt einen neuen Benutzer.
-# Request Body
-# {
-#  "fullname": "Example Username",
-# "email": "example@mail.de",
-#  "password": "examplePassword",
-#  "repeated_password": "examplePassword"
-# }
-# Success Response
-# Erfolgreicher Erstellung gibt dies ein Token sowie die Benutzerinformationen zurück, inklusive die einzigartige Nutzer-ID.
-# {
-#  "token": "83bf098723b08f7b23429u0fv8274",
-#  "fullname": "Example Username",
-#  "email": "example@mail.de",
-#  "user_id": 123
-# }
-# Status Codes
-# 201: Der Benutzer wurde erfolgreich erstellt.
-# 400: Ungültige Anfragedaten.
-# 500: Interner Serverfehler.
-# Rate Limits
-# No limit
-# No Permissions required
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        serializer = UserLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data["user"]
+        
+        token, create = Token.objects.get_or_create(user=user)
+        
+        return Response({
+                    "token": token.key,
+                    "fullname": user.fullname,
+                    "email": user.email,
+                    "user_id": user.id
+                }, status=status.HTTP_200_OK)
