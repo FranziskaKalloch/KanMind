@@ -16,12 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from auth_app import auth_app
 
 # ROUTER definieren:
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', include(auth_app.urls))
 ]
 
 
