@@ -1,3 +1,4 @@
+from django.contrib.auth import authenticate
 from rest_framework import serializers
 from auth_app.models import User
 
@@ -21,7 +22,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         if password != repeated_password:
             raise serializers.ValidationError("password dont match")
         return data
-        
+    
+    # speichert E-Mail, vollständigen Namen und das gehashte Passwort. 
+    # Die E-Mail wird zusätzlich als interner Benutzername verwendet
     def create(self, validated_data): # create_user wird genutzt, damit das Passwort sicher gehasht wird
         user = User.objects.create_user(
             username=validated_data['email'], 
@@ -30,10 +33,19 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             fullname=validated_data['fullname']) #creates, saves and returns a User
         return user
     # mit validated_data übergibt man die tatsächlich geprüften Eingaben. 
-   
-   # Eingaben entgegennehmen → 
-   # prüfen → 
-   # Passwortwiederholung entfernen → 
-   # Benutzer mit gehashtem Passwort speichern → 
-   # Benutzer zurückgeben
-   
+    
+    class UserLoginSerializer(serializers.Serializer):
+        email = serializers.EmailField()
+        password = serializers.CharField(write_only=True)
+        
+        def validate(self, data):
+            email = data['email']
+            password = data['password']
+            
+            user = authenticate(username=email, password=password)
+            
+            if not user:
+                raise serializers.ValidationError("User not found")
+            
+            data['user'] = user
+            return data 
