@@ -1,6 +1,11 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework import Response 
+from rest_framework.authtoken.models import Token
+from rest_framework import generics
+from rest_framework import status
+from rest_framework.permissions import AllowAny
+from .serializers import UserRegistrationSerializer
 
 # APIView:
 # man kann mit der APIView selbst bestimmen, was bei GET, POST und anderen
@@ -14,17 +19,23 @@ from rest_framework import Response
 # Bündelt mehrere Aktionen für eine Ressource, etwa Aufgaben auflisten,
 # erstellen, bearbeiten und löschen. Ein Router kann die URL's zuordnen
 class RegistrationView(APIView):
-    def post(self, request):
-        return Response('ich bin eine APIView')
+    permission_classes = [AllowAny]
+    def post(self, request): #request enthält die eingehende Anfrage | über request.data kommt man später an alle Registrierungsdaten
+        serializer = UserRegistrationSerializer(data=request.data) # Hier muss eine Instanz erstellt werden (). # Die Anfragedaten werden an den Parameter data des Serializers übergeben.
+        serializer.is_valid(raise_exception=True) # Jetzt müssen die Eingaben vom Serializer geprüft werden, dafür wird die is_valid() Methode benutzt
+        user = serializer.save() # Hiermit wird der User erstellt, mit save() führt DRF eine create() Methode im Serializer aus und gibt einen gespeicherten Nutzer zurück. Das wird in der Variable user gespeichert, damit kann dann später der Token erstellt werden
+
+        # Token generieren
+        token, created = Token.objects.get_or_create(user=user) # token enthält das Token-Objekt. Created sagt, ob es neu erstellt wurde oder bereits vorhanden ist
         
+        return Response({
+            "token": token.key,
+            "fullname": user.fullname,
+            "email": user.email,
+            "user_id": user.id
+        }, status=status.HTTP_201_CREATED) 
+        # es wird hier ein dictonary übergeben, weil die Antwort mehrere Werte enthalten soll!
 
-
-# Create your views here.
-
-
-
-# Die Registrierungs-View steuert den Ablauf der Anfrage. 
-# Dein Serializer übernimmt dabei weiterhin die Prüfung und Benutzererstellung.
 
 # POST-Anfrage entgegennehmen.
 # Registrierung muss ohne Anmeldung erlaubt sein.
