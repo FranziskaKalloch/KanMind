@@ -3,11 +3,23 @@ from rest_framework import serializers
 from ..models import Board
 
 class BoardListSerializer(serializers.ModelSerializer):
-    member_count = serializers.SerializerMethodField()
+    member_count = serializers.SerializerMethodField() # SerializerMethodField ist eine Ausgabefeld, dessen Wert du mit einer Methode berechnest
+    ticket_count = serializers.SerializerMethodField() # es sagt DRF: Für dieses Feld ruf meine Methode auf!
+    tasks_to_do_count = serializers.SerializerMethodField()
+    tasks_high_prio_count = serializers.SerializerMethodField()
     
-    def get_member_count(self, obj):
-        return obj.members.count()
+    def get_member_count(self, obj): # obj ist bereits das aktuell Board
+        return obj.members.count() # zählt die Mitglieder des Boards
+    
+    def get_ticket_count(self, obj):
+        return obj.tasks.count() # zählt alle tasks, wird über related_name="tasks" erreicht
+    
+    def get_tasks_to_do_count(self, obj):
+        return obj.tasks.filter(status="TODO").count() # 
+    
+    def get_tasks_high_prio_count(self, obj):
+        return obj.tasks.filter(priority="HIGH").count() #obj.tasks-> greift auf die Tasks dieses Board zu. Das wird durch related_name="tasks" im Task Model ermöglicht
+    
     class Meta:
         model = Board
-        fields = ('id', 'title', 'owner_id', 'member_count')
-        
+        fields = ('id', 'title', 'owner_id', 'member_count', 'ticket_count', 'tasks_to_do_count', 'tasks_high_prio_count')
