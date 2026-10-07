@@ -23,3 +23,9 @@ class BoardListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Board
         fields = ('id', 'title', 'owner_id', 'member_count', 'ticket_count', 'tasks_to_do_count', 'tasks_high_prio_count')
+
+class BoardCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Board
+        fields = ('title', 'members')
+        
