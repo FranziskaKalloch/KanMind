@@ -2,14 +2,11 @@ from django.db.models import Q
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
 
 from .serializers import BoardListSerializer, BoardCreateSerializer
 from ..models import Board
-
-
-
-# Create your views here.
-
+from .permission import IsBoardOwnerOrMember
 
 class BoardListView(generics.ListCreateAPIView): # übernimmt das Abrufen einer Liste
     serializer_class = BoardCreateSerializer # bestimmt wie ein Board in die JSON Antwort übersetzt wird
@@ -36,4 +33,13 @@ class BoardListView(generics.ListCreateAPIView): # übernimmt das Abrufen einer 
        self.perform_create(serializer)
        response_serializer = BoardListSerializer(serializer.instance)
        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-        
+  
+  
+# Diese View kombiniert Details (GET), Updates (PUT/PATCH), und LÖSCHEN (DELETE) 
+# Diese View kann jetzt automatisch GET, PUT, PATCH und DELETE per ID    
+class BoardDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Board.objects.all()
+    serializer_class = BoardListSerializer
+    
+    # Der User muss eingeloggt sein UND die Board-Bedingung erfüllen
+    permission_classes = [IsAuthenticated, IsBoardOwnerOrMember]
