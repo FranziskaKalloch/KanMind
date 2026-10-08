@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 
-from .serializers import BoardListSerializer, BoardCreateSerializer
+from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer
 from ..models import Board
 from .permission import IsBoardOwnerOrMember
 
@@ -39,7 +39,7 @@ class BoardListView(generics.ListCreateAPIView): # übernimmt das Abrufen einer 
 # Diese View kann jetzt automatisch GET, PUT, PATCH und DELETE per ID    
 class BoardDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Board.objects.all()
-    serializer_class = BoardListSerializer
+    serializer_class = BoardDetailSerializer
     
     # Der User muss eingeloggt sein UND die Board-Bedingung erfüllen
     permission_classes = [IsAuthenticated, IsBoardOwnerOrMember]

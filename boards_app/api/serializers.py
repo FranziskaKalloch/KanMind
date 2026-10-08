@@ -1,6 +1,7 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 
-from ..models import Board
+from ..models import Board, Tasks
 
 class BoardListSerializer(serializers.ModelSerializer):
     member_count = serializers.SerializerMethodField() # SerializerMethodField ist eine Ausgabefeld, dessen Wert du mit einer Methode berechnest
@@ -28,4 +29,26 @@ class BoardCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Board
         fields = ('title', 'members')
-        
+
+class BoardUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model() # liefert das User Model zurück
+        fields = ('id', 'email', 'fullname')
+    
+class BoardTaskSerializer(serializers.ModelSerializer):
+    assignee = BoardUserSerializer(read_only=True)
+    reviewer = BoardUserSerializer(read_only=True)
+    comments_count = serializers.SerializerMethodField()
+    class Meta:
+        model = Tasks
+        fields = ('id', 'title', 'description', 'status', 'priority', 'due_date', 'assignee', 'reviewer', 'comments_count', 'tasks')
+    def get_comments_count(self, obj):
+        return obj.comments.count()   
+class BoardDetailSerializer(serializers.ModelSerializer):
+    members = BoardUserSerializer(many=True, read_only=True)
+    tasks = BoardTaskSerializer(many=True, read_only=True)
+    class Meta:
+        model = Board
+        fields = ('id', 'title', 'owner_id', 'members')
+    # GET-Antwort: Board-Felder, Mitglieder und Tasks zusammenführen
+
