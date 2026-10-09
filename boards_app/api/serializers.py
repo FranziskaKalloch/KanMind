@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
-from ..models import Board, Tasks
+from ..models import Board
+from tasks_app.models import Tasks
 
 class BoardListSerializer(serializers.ModelSerializer):
     member_count = serializers.SerializerMethodField() # SerializerMethodField ist eine Ausgabefeld, dessen Wert du mit einer Methode berechnest
@@ -29,26 +30,39 @@ class BoardCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Board
         fields = ('title', 'members')
+        
 
 class BoardUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model() # liefert das User Model zurück
         fields = ('id', 'email', 'fullname')
+        
     
 class BoardTaskSerializer(serializers.ModelSerializer):
     assignee = BoardUserSerializer(read_only=True)
     reviewer = BoardUserSerializer(read_only=True)
     comments_count = serializers.SerializerMethodField()
+    status = serializers.CharField(source="get_status_display", read_only=True) # get_status_display holt aus dem choices den Rückgabewert. Gespeichert ist "TODO" -> zurückgegeben wird "to-do"
+    priority = serializers.CharField(source="get_priority_display", read_only=True) # source sagt dem Serializer, woher der Wert für das Ausgabefeld kommen soll. Ohne source nimmt das Feld status automatisch den Wert aus task.status → "TODO". Mit source="get_status_display" nimmt es stattdessen das Ergebnis von task.get_status_display() → "to-do".
     class Meta:
         model = Tasks
-        fields = ('id', 'title', 'description', 'status', 'priority', 'due_date', 'assignee', 'reviewer', 'comments_count', 'tasks')
+        fields = ('id', 'title', 'description', 'status', 'priority', 'due_date', 'assignee', 'reviewer', 'comments_count')
     def get_comments_count(self, obj):
-        return obj.comments.count()   
+        return obj.comments.count() 
+      
 class BoardDetailSerializer(serializers.ModelSerializer):
     members = BoardUserSerializer(many=True, read_only=True)
     tasks = BoardTaskSerializer(many=True, read_only=True)
     class Meta:
         model = Board
-        fields = ('id', 'title', 'owner_id', 'members')
-    # GET-Antwort: Board-Felder, Mitglieder und Tasks zusammenführen
+        fields = ('id', 'title', 'owner_id', 'members', 'tasks')
+        
+
+# Dieser serializer bereitet ausschließlich die Antwort vor für PATCH
+class BoardUpdateResponseSerializer(serializers.ModelSerializer):
+    owner_data = BoardUserSerializer(source="owner", read_only=True) # die Daten kommen aus der Board-Beziehung owner
+    members_data = BoardUserSerializer(source="members", many=True, read_only=True)
+    class Meta:
+        model = Board
+        fields = ('id', 'title', 'owner_data', 'members_data')
 
