@@ -1,10 +1,13 @@
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
+from rest_framework import serializers
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 
-from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateResponseSerializer
+from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateResponseSerializer, BoardUserSerializer
 from ..models import Board
 from .permission import IsBoardOwnerOrMember
 
@@ -57,13 +60,18 @@ class BoardDetailView(generics.RetrieveUpdateDestroyAPIView):
         response_serializer = BoardUpdateResponseSerializer(serializer.instance)
         return Response(response_serializer.data, status=status.HTTP_200_OK)
     
+class EmailCheckView(generics.GenericAPIView):
+    serializer_class = BoardUserSerializer
+    permission_classes = [IsAuthenticated] # Anmeldung ist verlangt
     
-    #### Die View kümmert sich darum:
-    # Welches Board ist gemeint?
-    # Darf der Benutzer darauf zugreifen?
-    # Soll es gelesen, geändert oder gelöscht werden?
-    
-    ### Nachdem die View das Board gefunden hat, kümmert sich der Serializer darum:
-    # Welche Informationen kommen in die Antwort?
-    # Wie werden Mitglieder und Tasks dargestellt?
-    # Welcher Text soll bei status erscheinen?
+    def get(self, request):
+        email = request.query_params.get("email")  # Email aus der URL lesen mit der query_params.get() Methode
+        email_field = serializers.EmailField() # erstellt das Prüffeld, sowohl für einen fehlenden Wert als auch das E-Mail Format
+        email = email_field.run_validation(email) # Prüft die E-Mail und gibt den validierten Wert zurück; bei fehlender oder ungültiger Eingabe antwortet DRF mit 400.
+        user = get_object_or_404(get_user_model(), email=email) # Sucht den User mit der geprüften E-Mail; wenn keiner existiert, wird 404 zurückgegeben.
+        serializer = self.get_serializer(user)
+        return Response(serializers.data, status=status.HTTP_200_OK)
+        
+        # get_object_or_404() sucht einen einzelnen Datensatz in der Datenbank.
+        # get_user_model() bestimmt, in welchem Model gesucht wird.
+        # email=email bestimmt, welcher User gesucht wird.
