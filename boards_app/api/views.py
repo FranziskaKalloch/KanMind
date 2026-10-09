@@ -70,7 +70,7 @@ class EmailCheckView(generics.GenericAPIView):
         email = email_field.run_validation(email) # Prüft die E-Mail und gibt den validierten Wert zurück; bei fehlender oder ungültiger Eingabe antwortet DRF mit 400.
         user = get_object_or_404(get_user_model(), email=email) # Sucht den User mit der geprüften E-Mail; wenn keiner existiert, wird 404 zurückgegeben.
         serializer = self.get_serializer(user)
-        return Response(serializers.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
         
         # get_object_or_404() sucht einen einzelnen Datensatz in der Datenbank.
         # get_user_model() bestimmt, in welchem Model gesucht wird.
