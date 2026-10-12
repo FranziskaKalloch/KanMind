@@ -5,7 +5,7 @@ from boards_app.models import Board
 # Create your models here.
     
 class Tasks(models.Model):
-    STATUS_CHOICES = (("TODO", "to-do"), ("INPROGRESS", "in-progress"), ("REVIEW", "review"))
+    STATUS_CHOICES = (("TODO", "to-do"), ("INPROGRESS", "in-progress"), ("REVIEW", "review"), ("DONE", "done"))
     PRIORITY_CHOICES = (("LOW", "low"), ("MEDIUM", "medium"), ("HIGH", "high"))
     
                        
