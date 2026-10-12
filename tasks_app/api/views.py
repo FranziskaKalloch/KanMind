@@ -1,9 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
+from django.shortcuts import status
 
 from ..models import Tasks 
-from .serializers import TasksSerializer
+from .serializers import TasksSerializer, CreateTasksSerializer
 
 
 class AssignToMeView(APIView):
@@ -50,3 +52,17 @@ class ReviewingView(APIView):
 # Was ist request.user?
 # Die konfigurierte Authentifizierung ermittelt, welcher Benutzer die Anfrage stellt. 
 # Diesen Benutzer erreichst du über die Eigenschaft user des Request-Objekts
+
+class CreateTaskView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        # die EingabeDaten an den Serializer übergeben
+        serializer = CreateTasksSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True) # die Daten validieren
+        board = serializer.validated_data.get('board') # das Board Objekt holen
+        if not board.members.filter(id=request.user.id).exists():
+            raise PermissionDenied
+        task = serializer.save() # erstellt die Task aus den geprüften Daten und gibt das neu erstellte Task Objekt zurück
+        serializer = TasksSerializer(task)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

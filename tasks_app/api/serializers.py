@@ -1,8 +1,10 @@
 from rest_framework import serializers
+from django.shortcuts import get_object_or_404
 
 from ..models import Tasks
 from auth_app.models import User
 from boards_app.api.serializers import BoardUserSerializer
+from boards_app.models import Board
 
 # Ablauf:
 # Der TasksSerializer verarbeitet eine Task.
@@ -62,6 +64,7 @@ class CreateTasksSerializer(serializers.ModelSerializer):
     priority = serializers.ChoiceField(choices=("low", "medium", "high"))
     assignee_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), source="assignee", required=False)
     reviewer_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), source="reviewer", required=False)
+    board = serializers.IntegerField(min_value=1) # nimmt die Board ID als ganze Zahl entgegen
     class Meta:
         model = Tasks
         fields = ('board','title', 'description', 'status', 'priority', 'assignee', 'reviewer', 'due_date', 'assignee_id', 'reviewer_id')
@@ -97,15 +100,18 @@ class CreateTasksSerializer(serializers.ModelSerializer):
         assignee = attrs.get('assignee')
         reviewer = attrs.get('reviewer')
         
-        if assignee is not None:
-            if not board.members.filter(id=assignee.id).exists():
-                raise serializers.ValidationError("The assignee must be a member of the board.")
+        if assignee is not None: # nur prüfen, wenn ein BEnutzer ausgewählt wurde # „Nur wenn ein Benutzer ausgewählt wurde, prüfe seine Mitgliedschaft.“
+            if not board.members.filter(id=assignee.id).exists(): # Wenn seine ID unter den Board-Membern nicht gefunden wird
+                raise serializers.ValidationError("The assignee must be a member of the board.") # die Validierung mit einer Fehlermeldung abbrechen
         
         if reviewer is not None:
             if not board.members.filter(id=reviewer.id).exists():
                 raise serializers.ValidationError("The Reviewer must be member of the board")
             
         return attrs
+    
+    def validate_board(self, value):
+        return get_object_or_404(Board, id=value) # existiert die Board ID, gibst du das Board Objekt zurück, wenn nicht wird 404 ausgelöst
                 
 
 # PrimaryKeyRelatedField()
