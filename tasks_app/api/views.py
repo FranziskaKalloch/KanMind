@@ -7,7 +7,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 
 from ..models import Tasks 
-from .serializers import TasksSerializer, CreateTasksSerializer, UpdateSerializer
+from .serializers import TasksSerializer, CreateTasksSerializer, UpdateSerializer, TaskUpdateResponseSerializer
 
 
 class AssignToMeView(APIView):
@@ -85,6 +85,9 @@ class CreateTaskView(APIView):
             # jetzt wird der Eingabe Serializer benötigt
             serializer = UpdateSerializer(task, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
+            serializer.save()
+            serializer = TaskUpdateResponseSerializer(task)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         
         def delete(self, request, task_id):
             pass

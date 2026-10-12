@@ -182,4 +182,7 @@ class UpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("The board of a task cannot be changed")
             
         return attrs
-                    
+
+class TaskUpdateResponseSerializer(TasksSerializer):
+    class Meta(TasksSerializer.Meta):
+        fields = ('id', 'title', 'description', 'status', 'priority', 'assignee', 'reviewer', 'due_date')
