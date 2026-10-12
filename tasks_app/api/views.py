@@ -90,4 +90,15 @@ class CreateTaskView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         
         def delete(self, request, task_id):
-            pass
+            '''
+            Task löschen
+            '''
+            task = get_object_or_404(Tasks, id=task_id) # gesucht wird im Model Tasks
+            board = task.board # Das Board des Task
+                        
+            if not board.members.filter(id=request.user.id).exists(): # nur boardmember dürfen danach weitermachen
+                raise PermissionDenied
+            
+            task.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+            
