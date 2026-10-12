@@ -123,3 +123,63 @@ class CreateTasksSerializer(serializers.ModelSerializer):
 # queryset: Sucht den Benutzer anhand der übermittelten ID.
 #source="assignee": Ordnet das gefundene Benutzerobjekt dem Model-Feld assignee zu.
 #required=False: Das Eingabefeld darf fehlen.
+
+
+#### PATCH #####
+# Ändert vorhandenene Task
+# Board gehört bereits zum vorhandenen Task
+# nicht gesendete Felder bleiben unverändert
+## UPDATESERIALIZER
+# Er übernimmt dieselben Aufgaben wie beim Erstellen:
+# - Status und Priorität prüfen und umwandeln.
+#- Assignee- und Reviewer-IDs auflösen.
+#- Deren Board-Mitgliedschaft prüfen.
+#Zwei Dinge ändern sich:
+#- Das Board stammt aus der vorhandenen Task, nicht aus dem Request.
+#- Das Board darf nicht geändert werden. Eine mitgeschickte Board-Angabe können wir ausdrücklich als ungültig ablehnen.
+
+class UpdateSerializer(serializers.ModelSerializer):
+    status = serializers.ChoiceField(choices=("to-do", "in-progress", "review", "done"))
+    priority = serializers.ChoiceField(choices=("low", "medium", "high"))
+    assignee_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), source="assignee", required=False)
+    reviewer_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), source="reviewer", required=False)
+    class Meta:
+        model = Tasks
+        fields = ('title', 'description', 'status', 'priority', 'due_date', 'assignee_id', 'reviewer_id')
+        
+    def validate_status(self, value): 
+        if value == "to-do": 
+            return "TODO"
+        elif value == "in-progress":
+            return "INPROGRESS"
+        elif value == "review":
+            return "REVIEW"
+        elif value == "done":
+            return "DONE"
+        
+    def validate_priority(self, value):
+        if value == "low":
+            return "LOW"
+        elif value == "medium":
+            return "MEDIUM"
+        elif value == "high":
+            return "HIGH"
+         
+    def validate(self, attrs):
+        board = self.instance.board # bedeutet deshalb: „Das Board der Task, die gerade aktualisiert wird.“
+        assignee = attrs.get('assignee')
+        reviewer = attrs.get('reviewer')
+            
+        if assignee is not None: # nur prüfen, wenn ein BEnutzer ausgewählt wurde # „Nur wenn ein Benutzer ausgewählt wurde, prüfe seine Mitgliedschaft.“
+            if not board.members.filter(id=assignee.id).exists(): # Wenn seine ID unter den Board-Membern nicht gefunden wird
+                raise serializers.ValidationError("The assignee must be a member of the board.") # die Validierung mit einer Fehlermeldung abbrechen
+            
+        if reviewer is not None:
+            if not board.members.filter(id=reviewer.id).exists():
+                raise serializers.ValidationError("The Reviewer must be member of the board")
+        
+        if "board" in self.initial_data:
+            raise serializers.ValidationError("The board of a task cannot be changed")
+            
+        return attrs
+                    

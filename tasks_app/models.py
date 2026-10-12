@@ -16,7 +16,7 @@ class Tasks(models.Model):
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default=None, null=True, blank=True)
     assignee = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks")
     reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="review_tasks")
-    due_date = models.DateTimeField(null=True, blank=True)
+    due_date = models.DateField(null=True, blank=True)
     
     class Meta:
         verbose_name = "Task"

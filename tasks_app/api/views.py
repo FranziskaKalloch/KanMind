@@ -2,10 +2,12 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
-from django.shortcuts import status
+from rest_framework import status
+
+from django.shortcuts import get_object_or_404
 
 from ..models import Tasks 
-from .serializers import TasksSerializer, CreateTasksSerializer
+from .serializers import TasksSerializer, CreateTasksSerializer, UpdateSerializer
 
 
 class AssignToMeView(APIView):
@@ -66,3 +68,23 @@ class CreateTaskView(APIView):
         task = serializer.save() # erstellt die Task aus den geprüften Daten und gibt das neu erstellte Task Objekt zurück
         serializer = TasksSerializer(task)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    class TaskDetailView(APIView):
+        permission_classes = [IsAuthenticated]
+        
+        def patch(self, request, task_id):
+            '''
+            Task aktualisieren
+            '''
+            task = get_object_or_404(Tasks, id=task_id) # gesucht wird im Model Tasks
+            board = task.board # Das Board des Task
+            
+            if not board.members.filter(id=request.user.id).exists(): # nur boardmember dürfen danach weitermachen
+                raise PermissionDenied
+            
+            # jetzt wird der Eingabe Serializer benötigt
+            serializer = UpdateSerializer(task, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+        
+        def delete(self, request, task_id):
+            pass
