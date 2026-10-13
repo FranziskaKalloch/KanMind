@@ -69,36 +69,31 @@ class CreateTaskView(APIView):
         serializer = TasksSerializer(task)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
-    class TaskDetailView(APIView):
-        permission_classes = [IsAuthenticated]
+class TaskDetailView(APIView):
+    permission_classes = [IsAuthenticated]
         
-        def patch(self, request, task_id):
-            '''
-            Task aktualisieren
-            '''
-            task = get_object_or_404(Tasks, id=task_id) # gesucht wird im Model Tasks
-            board = task.board # Das Board des Task
+    def patch(self, request, task_id):
+        ''' Task aktualisieren'''
+        task = get_object_or_404(Tasks, id=task_id) # gesucht wird im Model Tasks
+        board = task.board # Das Board des Task
             
-            if not board.members.filter(id=request.user.id).exists(): # nur boardmember dürfen danach weitermachen
-                raise PermissionDenied
-            
-            # jetzt wird der Eingabe Serializer benötigt
-            serializer = UpdateSerializer(task, data=request.data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            serializer = TaskUpdateResponseSerializer(task)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        if not board.members.filter(id=request.user.id).exists(): # nur boardmember dürfen danach weitermachen
+            raise PermissionDenied
+        # jetzt wird der Eingabe Serializer benötigt   
+        serializer = UpdateSerializer(task, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        serializer = TaskUpdateResponseSerializer(task)
+        return Response(serializer.data, status=status.HTTP_200_OK)
         
-        def delete(self, request, task_id):
-            '''
-            Task löschen
-            '''
-            task = get_object_or_404(Tasks, id=task_id) # gesucht wird im Model Tasks
-            board = task.board # Das Board des Task
+    def delete(self, request, task_id):
+        '''Task löschen'''
+        task = get_object_or_404(Tasks, id=task_id) # gesucht wird im Model Tasks
+        board = task.board # Das Board des Task
                         
-            if not board.members.filter(id=request.user.id).exists(): # nur boardmember dürfen danach weitermachen
-                raise PermissionDenied
+        if not board.members.filter(id=request.user.id).exists(): # nur boardmember dürfen danach weitermachen
+            raise PermissionDenied
             
-            task.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        task.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
             

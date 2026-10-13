@@ -18,8 +18,9 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'created_at', 'author', 'content')
         
 
+# POST EINGABE - nur content ist erforderlich
 class CommentsCreateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Comments
-        fields = ('content')
+        fields = ('content', )
