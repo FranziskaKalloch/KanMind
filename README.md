@@ -1,86 +1,142 @@
 # KanMind
 
-Description for the project. KanMind is a backend project... etc.
+KanMind is a REST API backend for an Kanban task management application. Built with Django and Django REST Framework, it suppurts user registration and login, boards, tasks, and tasks comments.
 
-## How to install
+Access to boards and tasks is controlled through authentication and permissions.
 
-Step 1: Create a virtuel environment
+## Features
 
-Unix
-'''bash
+- User registration and token-based authentication
+- Board creation and management
+- Task creation, updates, and deletion
+- Task assignment and review responsibilities
+- Task comments with deletion restricted to their authors
+
+## Prerequisites
+
+- Python 3
+- pip
+- A local copy of this repository
+
+Run the following commands from the project directory containing
+`manage.py`.
+
+Windows instructions below use PowerShell.
+
+## Installation
+
+### 1. Create a virtual environment
+
+macOS
+
+```bash
 python3 -m venv .venv
-'''
+```
 
 Windows
-'''bash
 
-'''
+```powershell
+py -m venv .venv
+```
 
-Step 2: Activate virtuell environment
+### 2. Activate the virtual environment
 
-Unix
-'''bash
+macOS
+
+```bash
 source .venv/bin/activate
-'''
+```
 
 Windows
-'''bash
 
-'''
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
 
-Step 3: Install the requirements
+If PowerShell blocks script execution, allow it for the current terminal
+session and activate the environment again:
 
-'''bash
-pip install -r requirements
-'''
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+.\.venv\Scripts\Activate.ps1
+```
 
-Step 4: Create your .env file
+### 3. Install dependencies
 
-Unix
-'''bash
+macOS and Windows
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+### 4. Configure environment variables
+
+Copy the example environment file.
+
+macOS
+
+```bash
 cp .env.example .env
-'''
+```
 
 Windows
-'''bash
 
-'''
+```powershell
+Copy-Item .env.example .env
+```
 
-Then set your values:
+Open `.env` and configure the variables listed in `.env.example`.
 
-Key | Value
-SECRET_KEY | Value
+| Variable | Description |
+| --- | --- |
+| `SECRET_KEY` | A secret key for the Django application. |
 
-Step 5: Migrate the migrations
+Keep your `.env` file private and exclude it from version control.
 
-'''bash
+### 5. Apply database migrations
+
+macOS and Windows
+
+```bash
 python manage.py migrate
-'''
+```
 
-Step 6: Start the server
+### 6. Start the development server
 
-'''bash
+macOS and Windows
+
+```bash
 python manage.py runserver
-'''
+```
 
-## Tech stack
+The development server runs at:
 
-- python
-- django
-- drf
-- squlite
+```http://127.0.0.1:8000/
 
-## Routes
+API endpoints are available under `/api/`.
 
-## Aufteilung und Aufgaben
+## Authentication
 
-user_app -> Registrierung, Login und E-Mail-Check
-boards_app -> Boards erstellen, anzeigen, ändern und löschen; Eigentümer und Mitglieder verwalten
-tasks_app -> Aufgaben erstellen, ändern und löschen; eigene zugewiesene Aufgaben und eigene Review-Aufgaben abrufen
-comments_app -> Kommentare einer Aufgabe anzeigen, erstellen und löschen
+After registration or login, the API returns an authentication token.
+Include it in the `Authorization` header when calling protected endpoints:
 
-## Beziehungen
+```text
+Authorization: Token <your-token>
+```
 
-Ein Board hat einen Owner und Mitglieder.
-Eine Aufgabe gehört zu einem Board und kann einen Bearbeiter sowie einen Reviewer haben.
-Ein Kommentar gehört zu einer Aufgabe und hat einen Autor.
+## Tech Stack
+
+- Python
+- Django
+- Django REST Framework
+- SQLite
+
+## Stop the Server
+
+Press `Ctrl+C` in the terminal.
+
+To deactivate the virtual environment, run:
+
+```bash
+deactivate
+```
