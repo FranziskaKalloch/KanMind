@@ -6,7 +6,8 @@ from rest_framework.response import Response
 
 from tasks_app.models import Tasks
 from .serializers import CommentSerializer, CommentsCreateSerializer
-from .permission import IsTaskBoardMember
+from .permission import IsTaskBoardMember, IsAuthor
+from ..models import Comments
 
 
 class CommentsView(APIView):
@@ -31,4 +32,18 @@ class CommentsView(APIView):
         if serializer.is_valid(raise_exception=True):
             comment = serializer.save(task=task, author=request.user)
             serializer = CommentSerializer(comment)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+
+class CommentDeleteView(APIView):
+    permission_classes = [IsAuthenticated, IsAuthor]
+    
+    def get_comment(self, task_id, comment_id):
+        '''Lädt und gibt den Kommentar anhand der ID zurück'''
+        return get_object_or_404(Comments, task_id=task_id, pk=comment_id)
+    
+    def delete(self, request, task_id, comment_id):
+        comment = self.get_comment(task_id, comment_id)
+        self.check_object_permissions(request, comment)
+        comment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

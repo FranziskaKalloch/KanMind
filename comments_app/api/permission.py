@@ -16,3 +16,10 @@ class IsTaskBoardMember(permissions.BasePermission):
         is_member_of_board = task.board.members.filter(id=request.user.id).exists() # Prüft, ob der User in den Mitgliedern des Boards der Task existiert
         
         return is_member_of_board 
+    
+
+class IsAuthor(permissions.BasePermission):
+    '''Elaubt nur die Löschung eines Tasks für den Ersteller'''
+    def has_object_permission(self, request, view, obj):
+        return obj.author_id == request.user.id
+    
