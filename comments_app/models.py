@@ -2,8 +2,6 @@ from django.db import models
 from django.conf import settings 
 from tasks_app.models import Tasks
 
-# Create your models here.
-
 
 class Comments(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="author")

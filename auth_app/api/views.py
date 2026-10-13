@@ -20,6 +20,7 @@ from .serializers import UserRegistrationSerializer, UserLoginSerializer
 class RegistrationView(APIView):
     permission_classes = [AllowAny]
     def post(self, request): #request enthält die eingehende Anfrage | über request.data kommt man später an alle Registrierungsdaten
+        """Register a user and return their authentication token and details."""
         serializer = UserRegistrationSerializer(data=request.data) # Hier muss eine Instanz erstellt werden (). # Die Anfragedaten werden an den Parameter data des Serializers übergeben.
         serializer.is_valid(raise_exception=True) # Jetzt müssen die Eingaben vom Serializer geprüft werden, dafür wird die is_valid() Methode benutzt
         user = serializer.save() # Hiermit wird der User erstellt, mit save() führt DRF eine create() Methode im Serializer aus und gibt einen gespeicherten Nutzer zurück. Das wird in der Variable user gespeichert, damit kann dann später der Token erstellt werden
@@ -39,6 +40,7 @@ class LoginView(APIView):
     permission_classes = [AllowAny]
     
     def post(self, request):
+        """Validate login credentials and return the user's token and details."""
         serializer = UserLoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]

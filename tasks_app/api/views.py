@@ -11,9 +11,11 @@ from .serializers import TasksSerializer, CreateTasksSerializer, UpdateSerialize
 
 
 class AssignToMeView(APIView):
+    """Provide access to tasks assigned to the authenticated user."""
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
+        """Return all tasks assigned to the authenticated user."""
         user = request.user
         tasks = Tasks.objects.filter(assignee=user)
         serializer = TasksSerializer(tasks, many=True) # der Serializer muss wissen, welche Daten er aufbereiten soll, daher tasks. Tasks enthält die gefundenen Tasks des angemeldeten users
@@ -24,9 +26,11 @@ class AssignToMeView(APIView):
         # Antwort zurückgeben — die aufbereiteten Daten als Response
         
 class ReviewingView(APIView):
+    """Provide access to tasks the authenticated user is assigned to review."""
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
+        """Return all tasks the authenticated user is assigned to review."""
         user = request.user # Benutzer wird ermittelt.
         tasks = Tasks.objects.filter(reviewer=user) # Finde alle Tasks, deren Reviewer dieser Benutzer ist., reviewer das Modelfeld, das geprüft werden soll # user: das Benutzerobjekt, mit dem verglichen werden soll
         serializer = TasksSerializer(tasks, many=True)
@@ -56,11 +60,12 @@ class ReviewingView(APIView):
 # Diesen Benutzer erreichst du über die Eigenschaft user des Request-Objekts
 
 class CreateTaskView(APIView):
+    """Allow authenticated board members to create tasks."""
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
-        # die EingabeDaten an den Serializer übergeben
-        serializer = CreateTasksSerializer(data=request.data)
+        """Create a task if the authenticated user is a board member."""
+        serializer = CreateTasksSerializer(data=request.data) # die EingabeDaten an den Serializer übergeben
         serializer.is_valid(raise_exception=True) # die Daten validieren
         board = serializer.validated_data.get('board') # das Board Objekt holen
         if not board.members.filter(id=request.user.id).exists():
@@ -70,10 +75,11 @@ class CreateTaskView(APIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
 class TaskDetailView(APIView):
+    """Allow board members to update and delete tasks on their board."""
     permission_classes = [IsAuthenticated]
         
     def patch(self, request, task_id):
-        ''' Task aktualisieren'''
+        """Partially update a task if the user is a member of its board."""
         task = get_object_or_404(Tasks, id=task_id) # gesucht wird im Model Tasks
         board = task.board # Das Board des Task
             
@@ -87,7 +93,7 @@ class TaskDetailView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
         
     def delete(self, request, task_id):
-        '''Task löschen'''
+        """Delete a task if the user is a member of its board."""
         task = get_object_or_404(Tasks, id=task_id) # gesucht wird im Model Tasks
         board = task.board # Das Board des Task
                         

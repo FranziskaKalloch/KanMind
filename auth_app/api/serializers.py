@@ -4,6 +4,7 @@ from auth_app.models import User
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
+    """Validate registration data and create a user."""
     # Hier werden neue Felder angelegt, da die im Model nicht vorkommen
     password = serializers.CharField(write_only=True) # Felddefinition: hiermit wird beschrieben "Mein Serializer hat ein Textfeld namens password, das nur als Eingabe verwendet werden darf"
     repeated_password = serializers.CharField(write_only=True)    
@@ -16,6 +17,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     # hier -> Validierung auf Objektebene (mehrere Felder verlgeichchen)
     # dazu wird er Parameter 'data' genutzt
     def validate(self, data):
+        """Ensure that the password and its confirmation match."""
         password = data['password']
         repeated_password = data['repeated_password']
                 
@@ -26,6 +28,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     # speichert E-Mail, vollständigen Namen und das gehashte Passwort. 
     # Die E-Mail wird zusätzlich als interner Benutzername verwendet
     def create(self, validated_data): # create_user wird genutzt, damit das Passwort sicher gehasht wird
+        """Create a user with a hashed password and email as the username."""
         user = User.objects.create_user(
             username=validated_data['email'], 
             email=validated_data['email'], 
@@ -35,10 +38,12 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     # mit validated_data übergibt man die tatsächlich geprüften Eingaben. 
     
 class UserLoginSerializer(serializers.Serializer):
+    """Validate the email and password provided for login."""
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
         
     def validate(self, data):
+        """Authenticate the user and add them to the validated data."""
         email = data['email']  # Die eingegebenen Werte aus dem Dictionary auslesen.
         password = data['password']
             

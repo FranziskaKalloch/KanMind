@@ -27,6 +27,7 @@ from boards_app.models import Board
 # Der name folgt immer diesem Muster: get_ + Feldname + _display()
 # source verweist auf diese Methode. Der Serializer ruft sie auf und verwendet den Rückgabewert
 class TasksSerializer(serializers.ModelSerializer):
+    """Serialize tasks with user details and a comment count."""
     assignee = BoardUserSerializer(read_only=True) # verschachtelter Serializer. Hier bekommt ein Task eine Beziehung zum Benutzer
     reviewer = BoardUserSerializer(read_only=True)# und es wird id, email, fullname wiedergegeben!
     comments_count = serializers.SerializerMethodField()
@@ -39,6 +40,7 @@ class TasksSerializer(serializers.ModelSerializer):
         
     
     def get_comments_count(self, obj):
+        """Return the number of comments associated with the task."""
         return obj.comments.count() 
     
 # Für API Reviewing
@@ -60,6 +62,7 @@ class TasksSerializer(serializers.ModelSerializer):
 # Deine Methode übersetzt ihn in den Model-Wert INPROGRESS und gibt diesen zurück.
 # Der zurückgegebene Wert landet in validated_data. Beim späteren Speichern wird dieser verwendet.
 class CreateTasksSerializer(serializers.ModelSerializer):
+    """Validate task creation data and assigned users' board membership."""
     status = serializers.ChoiceField(choices=("to-do", "in-progress", "review", "done"))
     priority = serializers.ChoiceField(choices=("low", "medium", "high"))
     assignee_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), source="assignee", required=False)
@@ -72,6 +75,7 @@ class CreateTasksSerializer(serializers.ModelSerializer):
     # ermittelt den zugehörigen Model-Wert -> bspw: to-do -> TODO
     # DRF ruft sie beim Validieren automatisch auf, weil ihr Name dem Muster validate_ + Feldname entspricht.
     def validate_status(self, value): # Status Umwandlung für das Model # value enthält den bereits geprüften Statuswert
+        """Convert the API status value to its corresponding model value."""
         if value == "to-do": # ist der Inhalt von value gleich dem TExt "to-do"
             return "TODO"
         elif value == "in-progress":
@@ -80,9 +84,9 @@ class CreateTasksSerializer(serializers.ModelSerializer):
             return "REVIEW"
         elif value == "done":
             return "DONE"
-    
-    # dient nur der Felder Validierung, also eines Felds!   
+      
     def validate_priority(self, value):
+        """Convert the API priority value to its corresponding model value."""
         if value == "low":
             return "LOW"
         elif value == "medium":
@@ -94,8 +98,8 @@ class CreateTasksSerializer(serializers.ModelSerializer):
     # dient der feldübergreifenden Validierung
     # attrs: Ein Dictionary (Wörterbuch), das alle bereits vorvalidierten Werte der Serializer-Felder enthält.
     # in attrs findet man die Werte über ihre Schlüssel: board, assignee, reviewer, title
-    def validate(self, attrs):
-        # 1. Werte aus dem attrs-Dictonary auslesen - das Board holen und die Tasks
+    def validate(self, attrs): # 1. Werte aus dem attrs-Dictonary auslesen - das Board holen und die Tasks
+        """Ensure that the selected assignee and reviewer are board members."""
         board = attrs.get('board')
         assignee = attrs.get('assignee')
         reviewer = attrs.get('reviewer')
@@ -111,6 +115,7 @@ class CreateTasksSerializer(serializers.ModelSerializer):
         return attrs
     
     def validate_board(self, value):
+        """Return the board matching the provided ID or raise a 404 error."""
         return get_object_or_404(Board, id=value) # existiert die Board ID, gibst du das Board Objekt zurück, wenn nicht wird 404 ausgelöst
                 
 
@@ -139,6 +144,7 @@ class CreateTasksSerializer(serializers.ModelSerializer):
 #- Das Board darf nicht geändert werden. Eine mitgeschickte Board-Angabe können wir ausdrücklich als ungültig ablehnen.
 
 class UpdateSerializer(serializers.ModelSerializer):
+    """Validate task updates while preserving the existing board."""
     status = serializers.ChoiceField(choices=("to-do", "in-progress", "review", "done"))
     priority = serializers.ChoiceField(choices=("low", "medium", "high"))
     assignee_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), source="assignee", required=False)
@@ -148,6 +154,7 @@ class UpdateSerializer(serializers.ModelSerializer):
         fields = ('title', 'description', 'status', 'priority', 'due_date', 'assignee_id', 'reviewer_id')
         
     def validate_status(self, value): 
+        """Convert the API status value to its corresponding model value."""
         if value == "to-do": 
             return "TODO"
         elif value == "in-progress":
@@ -158,6 +165,7 @@ class UpdateSerializer(serializers.ModelSerializer):
             return "DONE"
         
     def validate_priority(self, value):
+        """Convert the API priority value to its corresponding model value."""
         if value == "low":
             return "LOW"
         elif value == "medium":
@@ -166,6 +174,7 @@ class UpdateSerializer(serializers.ModelSerializer):
             return "HIGH"
          
     def validate(self, attrs):
+        """Check board membership and reject changes to the task's board."""
         board = self.instance.board # bedeutet deshalb: „Das Board der Task, die gerade aktualisiert wird.“
         assignee = attrs.get('assignee')
         reviewer = attrs.get('reviewer')
@@ -184,5 +193,6 @@ class UpdateSerializer(serializers.ModelSerializer):
         return attrs
 
 class TaskUpdateResponseSerializer(TasksSerializer):
+    """Serialize updated task details without board or comment count fields."""
     class Meta(TasksSerializer.Meta):
         fields = ('id', 'title', 'description', 'status', 'priority', 'assignee', 'reviewer', 'due_date')

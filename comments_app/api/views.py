@@ -15,19 +15,19 @@ class CommentsView(APIView):
     permission_classes = [IsAuthenticated, IsTaskBoardMember]
     
     def get_task(self, task_id):
-        '''Hilfsmethode, um das Objekt (hier den Task) zu holen oder einen 404 Fehler zu werfen'''
+        """Return the requested task or raise a 404 error."""
         return get_object_or_404(Tasks, pk=task_id) # pk ist die ID in der Datenbank, task_id der Parametername in der URL
         
     
     def get(self, request, task_id):
-        '''Lädt und gibt das Objekt anhand der ID zurück'''
+        """Return the task's comments in chronological order."""
         task = self.get_task(task_id)  # die Methode get_task wird aufgerufen und in der Variablen Task gespeichert
         serializer = CommentSerializer(task.comments.all().order_by("created_at"), many=True) # lädt alle Kommentare und sortiert die ältesten zuerst
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     
     def post(self, request, task_id):
-        '''Erstellt einen neuen Kommentar zur Task'''
+        """Create a task comment with the authenticated user as its author."""
         task = self.get_task(task_id) # Objekt wird anhand der ID geholt
         serializer = CommentsCreateSerializer(data=request.data) # Daten an den Serializer übergebe. 
         if serializer.is_valid(raise_exception=True):
@@ -40,10 +40,11 @@ class CommentDeleteView(APIView):
     permission_classes = [IsAuthenticated, IsAuthor]
     
     def get_comment(self, task_id, comment_id):
-        '''Lädt und gibt den Kommentar anhand der ID zurück'''
+        """Return a comment belonging to the task or raise a 404 error."""
         return get_object_or_404(Comments, task_id=task_id, pk=comment_id)
     
     def delete(self, request, task_id, comment_id):
+        """Delete the comment if the authenticated user is its author."""
         comment = self.get_comment(task_id, comment_id)
         self.check_object_permissions(request, comment)
         comment.delete()
