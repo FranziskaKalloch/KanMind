@@ -28,12 +28,14 @@ INSTALLED_APPS = [
     'comments_app.apps.CommentsAppConfig',
     'tasks_app.apps.TasksAppConfig',
     'rest_framework',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'corsheaders'
 ]
 
 AUTH_USER_MODEL = "auth_app.User"
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -43,11 +45,19 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# das erlaubt dem lokalen Frontend den Zugriff
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:5500",
+    "http://logalhost:5500"
+]
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication"
     ]
 }
+
+
 
 ROOT_URLCONF = 'core.urls'
 
